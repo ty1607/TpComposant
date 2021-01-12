@@ -6,174 +6,75 @@
 package bar;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import javax.swing.JComponent;
-import model.Model;
+import javax.swing.JLayeredPane;
+import javax.swing.event.EventListenerList;
 
 /**
  *
  * @author Thomas
  */
-public class BarComponent extends JComponent{
-    
-    /**
-     * Name of the property that defines the shape of the Bar object.
-     */
-    public static final String PROPERTY_SHAPE = "bar";
+public class BarComponent extends JLayeredPane {
 
     /**
-     * Constant value to set the property <code>bar</code> to
-     * <code>RECTANGLE</code>.
+     * Defines the margins used to set the preferred size of the ShapeLabel,
+     * depending on the text to display.
      */
-    public static final int RECTANGLE = 1;
-    /**
-     * Default Bar object size.
-     */
-    private static final Dimension PREFERRED_SIZE = new Dimension(100, 50);
-    /**
-     * Object that holds the set of property listeners of the Bar.
-     */
-    private final PropertyChangeSupport support;
-    /**
-     * Attribute that represents the value of the property <code>bar</code>.
-     */
-    private int myBar;
-    /**
-     * Attribute that represents the value of the property <code>color</code>.
-     */
-    private java.awt.Color myColor;
-    
-    /**
-     * Model where all the value are stored.
-     */
-    private Model model;
-    /**
-     * Build one default bar object.
-     */
-    public BarComponent() {
-        this(BarComponent.RECTANGLE, Color.red);
-    }
+    private enum Margin {
+        HORIZONTAL(1.2),
+        VERTICAL(1.4);
+        private final Double value;
 
-    /**
-     * Build one shape object, setting its two properties.
-     *
-     * @param theBar an int value that must belong to {
-     *      <code>BarComponenent.RECTANGLE</code>
-     *  }
-     * @param theColor a color used to fill the shape
-     */
-    public BarComponent(final int theBar, final Color theColor) {
-        super();
-        support = new PropertyChangeSupport(this);
-        privateSetBar(theBar);
-        privateSetColor(theColor);
-    }
-
-    /**
-     * Set the fill color of the bar.
-     * This method protects the constructor of the BarComponent class.
-     *
-     * @param theColor a color
-     *
-     * @see #setColor(java.awt.Color)
-     */
-    private void privateSetColor(final Color theColor) {
-        Color oldColor = getColor();
-        myColor = theColor;
-        repaint();
-        support.firePropertyChange("color", oldColor, getColor());
-    }
-
-    /**
-     * Set the fill color of the bar.
-     *
-     * @param theColor a color
-     *
-     * @see #getColor()
-     */
-    public void setColor(final Color theColor) {
-        privateSetColor(theColor);
-    }
-
-    /**
-     * Provides the fill color of the Shape object.
-     *
-     * @return the fill color
-     *
-     * @see #setColor(java.awt.Color)
-     */
-    public Color getColor() {
-        return myColor;
-    }
-
-    /**
-     * Set the shape of the shape object.
-     * This method protects the constructor of the Bar class.
-     *
-     * @param theBar an int value that must belong to {
-     *      <code>BarComponent.RECTANGLE</code>
-     *  }
-     *
-     * @see #setShape(int)
-     */
-    private void privateSetBar(final int theBar) {
-        int oldShape = getBar();
-        if (RECTANGLE == theBar) {
-            myBar = RECTANGLE;
+        private Margin(final Double value) {
+            this.value = value;
         }
-        repaint();
-        support.firePropertyChange(PROPERTY_SHAPE, oldShape, getBar());
+
+        public Double getValue() {
+            return value;
+        }
+    }
+    
+    private final Bar bar;
+    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+    private final EventListenerList listeners = new EventListenerList();
+
+    public BarComponent() {
+        this(Color.RED);
     }
 
-    /**
-     * Set the shape of the shape object.
-     *
-     * @param theShape an int value that must belong to
-     *                 {<code>Shape.OVALE</code>, <code>Shape.RECTANGLE</code>}
-     *
-     * @see #getShape()
-     */
-    public void setBar(final int theShape) {
-        privateSetBar(theShape);
+    public BarComponent(final Color bgColor) {
+        bar = new Bar(Bar.RECTANGLE, bgColor);
+
+        super.add(bar, JLayeredPane.DEFAULT_LAYER);
+        super.setLayout(null);
+        configureSelfListeners();
+        initPropertyForwarders();
     }
 
-    /**
-     * Provides a value representing the shape of the Shape object.
-     * This value belongs to {<code>Shape.OVALE</code>,
-     * <code>Shape.RECTANGLE</code>}
-     *
-     * @return the current shape value
-     */
-    public int getBar() {
-        return myBar;
+    @Override
+    public void setBounds(
+            final int x, final int y,
+            final int width, final int height) {
+        super.setBounds(x, y, width, height);
+
+        bar.setBounds(0, 0, width, height);
+    }
+
+    public void setBackgroundColor(final Color bgColor) {
+        bar.setColor(bgColor);
+    }
+
+
+    public Color getBackgroundColor() {
+        return bar.getColor();
     }
 
     @Override
     public boolean contains(int x, int y) {
-        //x²/a² + y²/b² <= 1.
-        double a = getWidth() / 2;
-        double b = getHeight() / 2;
-        double nX = x - a;
-        double nY = b - y;
-
-        return (nX * nX) / (a * a) + (nY * nY) / (b * b) <= 1;
-    }
-
-    @Override
-    public void paint(final Graphics g) {
-        Color oldColor = g.getColor();
-        g.setColor(myColor);
-        switch (myBar) {
-            case RECTANGLE:
-                g.fillRect(0, 0, getWidth(), getHeight());
-                break;
-            default:
-                System.out.println("ERROR THIS VALUE IS NOT CORRECT" + myBar);
-        }
-        g.setColor(oldColor);
+        return bar.contains(x, y);
     }
 
     @Override
@@ -188,22 +89,57 @@ public class BarComponent extends JComponent{
         support.removePropertyChangeListener(listener);
     }
 
-    @Override
-    public void addPropertyChangeListener(
-            final String propertyName,
-            final PropertyChangeListener listener) {
-        support.addPropertyChangeListener(propertyName, listener);
+    public void addShapeLabelListener(final BarListener listener) {
+        listeners.add(BarListener.class, listener);
     }
 
-    @Override
-    public void removePropertyChangeListener(
-            final String propertyName,
-            final PropertyChangeListener listener) {
-        support.removePropertyChangeListener(propertyName, listener);
+    public void removeShapeLabelListener(final BarListener listener) {
+        listeners.remove(BarListener.class, listener);
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return PREFERRED_SIZE;
+    private void fireShapeLabelClicked(final BarEvent event) {
+        synchronized (listeners) {
+            for (BarListener listener : listeners.getListeners(BarListener.class)) {
+                listener.barClicked(event);
+            }
+        }
+    }
+    
+    
+    private void configureSelfListeners() {
+        bar.addPropertyChangeListener("color", (e) -> {
+            support.firePropertyChange(
+                    "backgroundColor", e.getOldValue(), e.getNewValue());
+        });
+    }
+
+    private void initPropertyForwarders() {
+        super.addMouseListener(new MouseAdapter() {
+            private Color idleColor;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                bar.setColor(Color.BLACK);
+            }
+
+            @Override
+            public void mouseReleased(final MouseEvent e) {
+                bar.setColor(Color.GREEN);
+                final BarEvent event = new BarEvent(BarComponent.this);
+                fireShapeLabelClicked(event);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                idleColor = bar.getColor();
+                bar.setColor(Color.GREEN);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                bar.setColor(idleColor);
+            }
+
+        });
     }
 }
