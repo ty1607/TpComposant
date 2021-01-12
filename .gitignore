@@ -71,8 +71,8 @@ dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
-*.properties
-build-impl.xml
+nbproject/*.properties
+nbproject/build-impl.xml
 
 ##############################
 ## Visual Studio Code

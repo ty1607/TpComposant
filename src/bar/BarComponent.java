@@ -6,6 +6,8 @@
 package bar;
 
 import java.awt.Color;
+import java.awt.GridLayout;
+import java.awt.LayoutManager;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.beans.PropertyChangeListener;
@@ -38,6 +40,8 @@ public class BarComponent extends JLayeredPane {
     }
     
     private final Bar bar;
+    private final ButtonBar buttonRight;
+    private final ButtonBar buttonLeft;
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
     private final EventListenerList listeners = new EventListenerList();
 
@@ -47,9 +51,14 @@ public class BarComponent extends JLayeredPane {
 
     public BarComponent(final Color bgColor) {
         bar = new Bar(Bar.RECTANGLE, bgColor);
-
+        buttonRight = new ButtonBar(ButtonBar.RIGHT_ARROW, Color.LIGHT_GRAY);
+        buttonLeft = new ButtonBar(ButtonBar.LEFT_ARROW, Color.LIGHT_GRAY);
+        buttonRight.setSize(100, 100);
+        buttonLeft.setSize(100, 100);
+        super.add(buttonLeft, JLayeredPane.DEFAULT_LAYER);
         super.add(bar, JLayeredPane.DEFAULT_LAYER);
-        super.setLayout(null);
+        super.add(buttonRight, JLayeredPane.DEFAULT_LAYER);
+        super.setLayout(new GridLayout(1,3));
         configureSelfListeners();
         initPropertyForwarders();
     }
