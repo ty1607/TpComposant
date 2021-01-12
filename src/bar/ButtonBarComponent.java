@@ -6,7 +6,6 @@
 package bar;
 
 import java.awt.Color;
-import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.beans.PropertyChangeListener;
@@ -18,7 +17,7 @@ import javax.swing.event.EventListenerList;
  *
  * @author Thomas
  */
-public class BarComponent extends JLayeredPane {
+public class ButtonBarComponent extends JLayeredPane {
 
     /**
      * Defines the margins used to set the preferred size of the ShapeLabel,
@@ -38,26 +37,19 @@ public class BarComponent extends JLayeredPane {
         }
     }
     
-    private final Bar bar;
-    private final ButtonBar buttonRight;
-    private final ButtonBar buttonLeft;
+    private final ButtonBar buttonBar;
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
     private final EventListenerList listeners = new EventListenerList();
 
-    public BarComponent() {
+    public ButtonBarComponent() {
         this(Color.RED);
     }
 
-    public BarComponent(final Color bgColor) {
-        bar = new Bar(Bar.RECTANGLE, bgColor);
-        buttonRight = new ButtonBar(ButtonBar.RIGHT_ARROW, Color.LIGHT_GRAY);
-        buttonLeft = new ButtonBar(ButtonBar.LEFT_ARROW, Color.LIGHT_GRAY);
-        buttonRight.setSize(100, 100);
-        buttonLeft.setSize(100, 100);
-        super.add(buttonLeft, JLayeredPane.DEFAULT_LAYER);
-        super.add(bar, JLayeredPane.DEFAULT_LAYER);
-        super.add(buttonRight, JLayeredPane.DEFAULT_LAYER);
-        super.setLayout(new GridLayout(1,3));
+    public ButtonBarComponent(final Color bgColor) {
+        buttonBar = new ButtonBar(ButtonBar.RIGHT_ARROW, bgColor);
+
+        super.add(buttonBar, JLayeredPane.DEFAULT_LAYER);
+        super.setLayout(null);
         configureSelfListeners();
         initPropertyForwarders();
     }
@@ -68,21 +60,25 @@ public class BarComponent extends JLayeredPane {
             final int width, final int height) {
         super.setBounds(x, y, width, height);
 
-        bar.setBounds(0, 0, width, height);
+        buttonBar.setBounds(0, 0, width, height);
     }
 
     public void setBackgroundColor(final Color bgColor) {
-        bar.setColor(bgColor);
+        buttonBar.setColor(bgColor);
     }
 
 
     public Color getBackgroundColor() {
-        return bar.getColor();
+        return buttonBar.getColor();
+    }
+    
+    public void setOriantationArrow(final int oriantation) {
+        buttonBar.setBar(oriantation);
     }
 
     @Override
     public boolean contains(int x, int y) {
-        return bar.contains(x, y);
+        return buttonBar.contains(x, y);
     }
 
     @Override
@@ -105,17 +101,17 @@ public class BarComponent extends JLayeredPane {
         listeners.remove(BarListener.class, listener);
     }
 
-    private void fireShapeLabelClicked(final BarEvent event) {
+    private void fireShapeLabelClicked(final ButtonBarEvent event) {
         synchronized (listeners) {
-            for (BarListener listener : listeners.getListeners(BarListener.class)) {
-                listener.barClicked(event);
+            for (ButtonBarListener listener : listeners.getListeners(ButtonBarListener.class)) {
+                listener.buttonbarClicked(event);
             }
         }
     }
     
     
     private void configureSelfListeners() {
-        bar.addPropertyChangeListener("color", (e) -> {
+        buttonBar.addPropertyChangeListener("color", (e) -> {
             support.firePropertyChange(
                     "backgroundColor", e.getOldValue(), e.getNewValue());
         });
@@ -127,25 +123,25 @@ public class BarComponent extends JLayeredPane {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                bar.setColor(Color.BLACK);
+                buttonBar.setColor(Color.BLACK);
             }
 
             @Override
             public void mouseReleased(final MouseEvent e) {
-                bar.setColor(Color.GREEN);
-                final BarEvent event = new BarEvent(BarComponent.this);
+                buttonBar.setColor(Color.GREEN);
+                final ButtonBarEvent event = new ButtonBarEvent(ButtonBarComponent.this);
                 fireShapeLabelClicked(event);
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                idleColor = bar.getColor();
-                bar.setColor(Color.GREEN);
+                idleColor = buttonBar.getColor();
+                buttonBar.setColor(Color.GREEN);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                bar.setColor(idleColor);
+                buttonBar.setColor(idleColor);
             }
 
         });
